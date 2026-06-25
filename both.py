@@ -1,40 +1,74 @@
+import asyncio
+import logging
 import mysql.connector
-from aiogram import Bot, Dispatcher, types
+
+from aiogram import Bot, Dispatcher
 from aiogram.filters import Command
 from aiogram.types import Message
-import asyncio
 
 TOKEN = "8974791081:AAGu68UhGYWWZXU0IqORQd5MHjRHmUM-lSU"
 
-ADMINS = [8065108309]  # Telegram ID главного администратора
+ADMINS = [8065108309]
 
-bot = Bot(token=TOKEN)
+logging.basicConfig(level=logging.INFO)
+
+try:
+    db = mysql.connector.connect(
+        host="92.255.104.90",
+        port=3311,
+        user="vardyrussia",
+        password="vardyrussia",
+        database="vardyrussia"
+    )
+    print("MYSQL CONNECTED")
+except Exception as e:
+    print(f"MYSQL ERROR: {e}")
+    raise
+
+bot = Bot(TOKEN)
 dp = Dispatcher()
 
-db = mysql.connector.connect(
-    host="92.255.104.90",
-    port=3311,
-    user="vardyrussia",
-    password="vardyrussia",
-    database="vardyrussia"
-)
 
 @dp.message(Command("start"))
 async def start(message: Message):
     if message.from_user.id not in ADMINS:
-        return await message.answer("Нет доступа.")
-    
+        return await message.answer("Нет доступа")
+
     await message.answer(
-        "/admins - список\n"
-        "/setrank ID Звание\n"
-        "/add Ник Звание\n"
-        "/del ID"
+        "Команды:\n"
+        "/admins\n"
+        "/setrank ID Звание"
     )
+
 
 @dp.message(Command("admins"))
 async def admins(message: Message):
     if message.from_user.id not in ADMINS:
         return
+
+    cursor = db.cursor()
+    cursor.execute("SELECT id,nickname,rank FROM admins")
+
+    rows = cursor.fetchall()
+
+    if not rows:
+        return await message.answer("Администраторов нет")
+
+    text = ""
+
+    for admin in rows:
+        text += f"{admin[0]} | {admin[1]} | {admin[2]}\n"
+
+    await message.answer(text)
+
+
+async def main():
+    print("BOT STARTED")
+    await dp.start_polling(bot)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())        return
 
     cursor = db.cursor()
     cursor.execute("SELECT id,nickname,rank FROM admins")
