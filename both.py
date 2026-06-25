@@ -12,7 +12,8 @@ bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
 db = mysql.connector.connect(
-    host="localhost",
+    host="92.255.104.90",
+    port=3311,
     user="vardyrussia",
     password="vardyrussia",
     database="vardyrussia"
