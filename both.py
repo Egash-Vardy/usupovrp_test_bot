@@ -1,5 +1,4 @@
 import asyncio
-import logging
 import mysql.connector
 
 from aiogram import Bot, Dispatcher
@@ -10,31 +9,87 @@ TOKEN = "8974791081:AAGu68UhGYWWZXU0IqORQd5MHjRHmUM-lSU"
 
 ADMINS = [8065108309]
 
-logging.basicConfig(level=logging.INFO)
+db = mysql.connector.connect(
+    host="92.255.104.90",
+    port=3311,
+    user="vardyrussia",
+    password="vardyrussia",
+    database="vardyrussia"
+)
 
-try:
-    db = mysql.connector.connect(
-        host="92.255.104.90",
-        port=3311,
-        user="vardyrussia",
-        password="vardyrussia",
-        database="vardyrussia"
-    )
-    print("MYSQL CONNECTED")
-except Exception as e:
-    print(f"MYSQL ERROR: {e}")
-    raise
-
-bot = Bot(TOKEN)
+bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
 
 @dp.message(Command("start"))
 async def start(message: Message):
     if message.from_user.id not in ADMINS:
-        return await message.answer("Нет доступа")
+        await message.answer("Нет доступа")
+        return
 
     await message.answer(
+        "/admins - список админов\n"
+        "/setrank ID Звание"
+    )
+
+
+@dp.message(Command("admins"))
+async def admins(message: Message):
+    if message.from_user.id not in ADMINS:
+        return
+
+    cursor = db.cursor()
+    cursor.execute("SELECT id, nickname, rank FROM admins")
+
+    rows = cursor.fetchall()
+
+    if not rows:
+        await message.answer("Список пуст")
+        return
+
+    text = "Администраторы:\n\n"
+
+    for admin in rows:
+        text += f"#{admin[0]} | {admin[1]} | {admin[2]}\n"
+
+    await message.answer(text)
+
+
+@dp.message(Command("setrank"))
+async def setrank(message: Message):
+    if message.from_user.id not in ADMINS:
+        return
+
+    args = message.text.split(maxsplit=2)
+
+    if len(args) < 3:
+        await message.answer(
+            "Пример:\n/setrank 1 Главный Администратор"
+        )
+        return
+
+    admin_id = args[1]
+    rank = args[2]
+
+    cursor = db.cursor()
+
+    cursor.execute(
+        "UPDATE admins SET rank=%s WHERE id=%s",
+        (rank, admin_id)
+    )
+
+    db.commit()
+
+    await message.answer("Звание изменено")
+
+
+async def main():
+    print("BOT STARTED")
+    await dp.start_polling(bot)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())    await message.answer(
         "Команды:\n"
         "/admins\n"
         "/setrank ID Звание"
