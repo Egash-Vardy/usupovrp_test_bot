@@ -1,21 +1,9 @@
 import asyncio
-import mysql.connector
-
 from aiogram import Bot, Dispatcher
 from aiogram.filters import Command
 from aiogram.types import Message
 
 TOKEN = "8974791081:AAGu68UhGYWWZXU0IqORQd5MHjRHmUM-lSU"
-
-ADMINS = [8065108309]
-
-db = mysql.connector.connect(
-    host="92.255.104.90",
-    port=3311,
-    user="vardyrussia",
-    password="vardyrussia",
-    database="vardyrussia"
-)
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
@@ -23,18 +11,23 @@ dp = Dispatcher()
 
 @dp.message(Command("start"))
 async def start(message: Message):
-    if message.from_user.id not in ADMINS:
-        await message.answer("Нет доступа")
-        return
-
     await message.answer(
-        "/admins - список админов\n"
-        "/setrank ID Звание"
+        "👋 Привет! Я простой бот.\n"
+        "Напиши любое сообщение."
     )
 
 
-@dp.message(Command("admins"))
-async def admins(message: Message):
+@dp.message()
+async def echo(message: Message):
+    await message.answer(f"Вы написали:\n{message.text}")
+
+
+async def main():
+    await dp.start_polling(bot)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())async def admins(message: Message):
     if message.from_user.id not in ADMINS:
         return
 
